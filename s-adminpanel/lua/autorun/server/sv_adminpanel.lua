@@ -20,8 +20,8 @@ hook.Add( "PlayerSay", "CommandSlownAdminPanel", function( ply, text, team )
 	if text == SAdminPanel.ModeAdminCommand then
 		if ply:GetNWBool("Admin") == false then
 			if SAdminPanel.Ulx then
-				ply:ConCommand('ulx god '..ply:Nick())
-				ply:ConCommand('ulx cloak '..ply:Nick())
+				ply:ConCommand("ulx god")
+				ply:ConCommand("ulx cloak")
 			elseif SAdminPanel.FAdmin then
 				ply:ConCommand('FAdmin god '..ply:Nick())
 				ply:ConCommand('FAdmin cloak '..ply:Nick())
@@ -34,8 +34,8 @@ hook.Add( "PlayerSay", "CommandSlownAdminPanel", function( ply, text, team )
 
 		elseif ply:GetNWBool("Admin") == true then
 			if SAdminPanel.Ulx then
-				ply:ConCommand('ulx ungod '..ply:Nick())
-				ply:ConCommand('ulx uncloak '..ply:Nick())
+				ply:ConCommand("ulx ungod")
+				ply:ConCommand("ulx uncloak")
 			elseif SAdminPanel.FAdmin then
 				ply:ConCommand('FAdmin ungod '..ply:Nick())
 				ply:ConCommand('FAdmin uncloak '..ply:Nick())
