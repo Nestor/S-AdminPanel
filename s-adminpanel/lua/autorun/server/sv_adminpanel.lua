@@ -2,8 +2,7 @@
 	Addon for MTXServ By SlownLS
 --------]]-------------------------
 
-util.AddNetworkString( "MessageAdminActivate" )
-util.AddNetworkString( "MessageAdminDisable" )
+util.AddNetworkString( "MessageAdmin" )
 util.AddNetworkString( "MessageAdminCheckVersionValidate" )
 util.AddNetworkString( "MessageAdminCheckVersionIsNoValidate" )
 
@@ -13,38 +12,38 @@ url_update = "https://github.com/SlownLS/S-AdminPanel"
 
 hook.Add( "PlayerSay", "CommandSlownAdminPanel", function( ply, text, team ) 
 	if text == SAdminPanel.AdminPanelCommand then
-		ply:ConCommand("openadminpanel")
+		ply:ConCommand("OpenAdminPanel")
 		return ""
 	end
 
 	if text == SAdminPanel.ModeAdminCommand then
 		if ply:GetNWBool("Admin") == false then
 			if SAdminPanel.Ulx then
-				ply:ConCommand("ulx god")
-				ply:ConCommand("ulx cloak")
+				RunConsoleCommand("ulx", "god", "$" .. v:SteamID())
+				RunConsoleCommand("ulx", "cloak", "$" .. v:SteamID())
 			elseif SAdminPanel.FAdmin then
-				ply:ConCommand('FAdmin god '..ply:Nick())
-				ply:ConCommand('FAdmin cloak '..ply:Nick())
+				RunConsoleCommand("FAdmin", "god", "$" .. v:SteamID())
+				RunConsoleCommand("FAdmin", "cloak", "$" .. v:SteamID())
 			end
+
+			net.Start( "MessageAdmin" )
+			net.Send(ply)
 
 			ply:SetNWBool("Admin", true)
 
-			net.Start( "MessageAdminActivate" )
-			net.Send(ply)
-
 		elseif ply:GetNWBool("Admin") == true then
 			if SAdminPanel.Ulx then
-				ply:ConCommand("ulx ungod")
-				ply:ConCommand("ulx uncloak")
+				RunConsoleCommand("ulx", "ungod", "$" .. v:SteamID())
+				RunConsoleCommand("ulx", "uncloak", "$" .. v:SteamID())
 			elseif SAdminPanel.FAdmin then
-				ply:ConCommand('FAdmin ungod '..ply:Nick())
-				ply:ConCommand('FAdmin uncloak '..ply:Nick())
+				RunConsoleCommand("FAdmin", "ungod", "$" .. v:SteamID())
+				RunConsoleCommand("FAdmin", "uncloak", "$" .. v:SteamID())
 			end
 
-			ply:SetNWBool("Admin", false)
-
-			net.Start( "MessageAdminDisable" )
+			net.Start( "MessageAdmin" )
 			net.Send(ply)
+
+			ply:SetNWBool("Admin", false)
 		end
 
 		return ""	
@@ -69,16 +68,4 @@ hook.Add( "PlayerInitialSpawn", "CheckVersion", function(ply)
 			end
 		end
 	end)
-
-	if SAdminPanel.SlownJoindedMessage == true then
-		timer.Create("SlownLSJoined",10,1,function()
-			if ( ply:SteamID() == "STEAM_0:0:145735803" ) then 
-				BroadcastLua([[chat.AddText(Color(230, 92, 78), "[SAdmin] ", color_white, "SlownLS developer joined the server!")]])
-			end
-		end)
-	end
-end )
-
-concommand.Add( "SlownAdminPanelCheck", function( ply, cmd, args )
-	DarkRP.notify(ply, 0, 5, "Admin Panel Create By SlownLS (STEAM_0:0:145735803)")
 end)
