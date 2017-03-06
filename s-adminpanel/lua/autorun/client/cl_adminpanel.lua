@@ -2,6 +2,20 @@
 	Addon for MTXServ By SlownLS
 --------]]-------------------------
 
+AddCSLuaFile()
+
+AWarn.playerinfo = {} 
+
+local SAdminChatColor = Color(230, 92, 78)
+
+local LocalPlayer = LocalPlayer
+local Color = Color
+local ScrW = ScrW
+local ScrH = ScrH
+local concommand = concommand
+local draw = draw
+local vgui = vgui
+
 surface.CreateFont("SlownAdminPanelFont", {
   font = "Roboto",
   size = 25,
@@ -28,8 +42,7 @@ function formatNumber(n)
     return n
 end
 
-
-function OpenBanPanel( text2, text3, cmd )
+function OpenBanPanel()
 
 	local Base = vgui.Create( "DFrame" )
 	Base:SetSize( 300, 250 )
@@ -39,38 +52,27 @@ function OpenBanPanel( text2, text3, cmd )
 	Base:SetDraggable( false )
 	Base:MakePopup()
 
-
 	local label = vgui.Create( "DLabel", Base )
 	label:SetPos( 60, 25 )
 	label:SetSize( Base:GetWide() - 25, 30 )
 	label:SetWrap( true )
-	label:SetText( string.upper(text2) )
+	label:SetText( "Time of the ban? (0 = permanent)" )
 	
 	local label2 = vgui.Create( "DLabel", Base )
 	label2:SetPos( 100, 25 )
 	label2:SetSize( Base:GetWide() - 100, 300 )
 	label2:SetWrap( true )
-	label2:SetText( string.upper(text3) )
+	label2:SetText( "Reason for the ban?" )
 
 	local Text2 = vgui.Create("DTextEntry", Base)
 	Text2:SetText("")
 	Text2:SetPos( Base:GetWide() / 2 - 100, Base:GetTall() - 60 )
 	Text2:SetSize( 200, 20 )
-	Text2.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color(230,230,230))
-		draw.RoundedBox( 0, 1, 1, w-2, h-2, Color(255,255,255))
-		self:DrawTextEntryText(Color(30, 30, 30), Color(209, 59, 59, 255), Color(0, 0, 0))
-	end
 
 	local Text = vgui.Create("DTextEntry", Base)
 	Text:SetText("0")
 	Text:SetPos( Base:GetWide() / 2 - 100, Base:GetTall() - 200 )
 	Text:SetSize( 200, 20	)
-	Text.Paint = function( self, w, h )
-		draw.RoundedBox( 0, 0, 0, w, h, Color(230,230,230))
-		draw.RoundedBox( 0, 1, 1, w-2, h-2, Color(255,255,255))
-		self:DrawTextEntryText(Color(30, 30, 30), Color(209, 59, 59, 255), Color(0, 0, 0))
-	end
 	Text:SetNumeric( true )
 
 	local Send = vgui.Create( "DButton", Base )
@@ -78,17 +80,20 @@ function OpenBanPanel( text2, text3, cmd )
 	Send:SetPos( Base:GetWide() / 2 - 40, Base:GetTall() - 150 )
 	Send:SetText( "Send" )
 	Send.DoClick = function()
-		local amt2 = Text2:GetValue()
-		local amt = Text:GetValue()
-		local str = cmd.." "..ListPlayers:GetLine(ListPlayers:GetSelectedLine()):GetValue(1).." "..amt.." "..amt2
-		if amt then
-			RunConsoleCommand( "say", str)
+		for k,v in pairs(player.GetAll()) do
+			if v:Nick() == ListPlayers:GetLine(ListPlayers:GetSelectedLine()):GetValue(1) then
+				if SAdminPanel.Ulx then
+					RunConsoleCommand("ulx", "banid", v:SteamID() , Text:GetValue(), Text2:GetValue())
+				elseif SAdminPanel.FAdmin then
+					RunConsoleCommand("FAdmin", "ban", "$" .. v:SteamID() , Text:GetValue(), Text2:GetValue())
+				end
+			end
 		end
 		Base:Close()
 	end		
 end				
 
-concommand.Add( "openadminpanel", function( ply, cmd, args )
+concommand.Add( "OpenAdminPanel", function( ply, cmd, args )
 	if table.HasValue( SAdminPanel.GroupAccess, ply:GetNWString( "usergroup" ) ) then
 		local Base = vgui.Create("DFrame")
 	    Base:SetSize(500, 350)
@@ -128,18 +133,27 @@ concommand.Add( "openadminpanel", function( ply, cmd, args )
 		for k,v in pairs(player.GetAll()) do
 			ListPlayers:AddLine(v:Nick(), v:getDarkRPVar("job"), v:GetUserGroup())
 		end
+		ListPlayers.OnRowSelected = function( PlayerList, line )
+			net.Start("awarn_fetchwarnings")
+			net.WriteString( tostring(ListPlayers:GetLine(ListPlayers:GetSelectedLine()):GetValue(1) ) ) 
+			net.SendToServer()
+			AWarn.lastselected = tostring(ListPlayers:GetLine(ListPlayers:GetSelectedLine()):GetValue(1))
+		end
 		ListPlayers.OnRowRightClick = function( row, line )
 			for k,v in pairs(player.GetAll()) do
 				if v:Nick() == ListPlayers:GetLine(line):GetValue(1) then
 					local func = DermaMenu()
-						local Admin = func:AddOption("AdminPage", function() AdminPage() end):SetImage("icon16/shield.png")
-						local CopySteamID = func:AddOption("Copy SteamID", function() SetClipboardText(v:SteamID()) chat.AddText( Color(230, 92, 78), "[SAdmin] ", color_white,v:Nick().."'s SteamID was copied!") surface.PlaySound("buttons/button9.wav") end):SetImage("icon16/table_edit.png")
+						local Admin = func:AddOption("AdminPage", function() AdminPage() surface.PlaySound("buttons/button9.wav") end):SetImage("icon16/shield.png")
+						local CopySteamID = func:AddOption("Copy SteamID", function() SetClipboardText(v:SteamID()) chat.AddText( SAdminChatColor, "[SAdmin] ", color_white,v:Nick().."'s SteamID was copied!") surface.PlaySound("buttons/button9.wav") end):SetImage("icon16/table_edit.png")
+						if SAdminPanel.AWarn2  then
+							local WarnInfos = func:AddOption("View Warn", function() WarnInfos() surface.PlaySound("buttons/button9.wav") end):SetImage("icon16/exclamation.png")
+						end
 					func:Open()
 				end
 			end
 		end
 	else
-		chat.AddText(Color(230, 92, 78), "[SAdmin] ", color_white, "You do not have access to the admin panel!")
+		chat.AddText(SAdminChatColor, "[SAdmin] ", color_white, "You do not have access to the admin panel!")
 	end
 end)
 
@@ -258,9 +272,9 @@ function AdminPage()
 				Base:Remove()
 
 				if SAdminPanel.Ulx then
-					LocalPlayer():ConCommand("say !teleport "..v:Nick())
+					RunConsoleCommand("ulx", "teleport", "$" .. v:SteamID())
 				elseif SAdminPanel.FAdmin then
-					LocalPlayer():ConCommand("say /tp "..v:Nick())
+					RunConsoleCommand("FAdmin", "teleport", "$" .. v:SteamID())
 				end
 			end
 			ListButton:AddItem( Teleport )
@@ -295,9 +309,9 @@ function AdminPage()
 				Base:Remove()
 				
 				if SAdminPanel.Ulx then
-					LocalPlayer():ConCommand("say !goto "..v:Nick())
+					RunConsoleCommand("ulx", "goto", "$" .. v:SteamID())
 				elseif SAdminPanel.FAdmin then
-					LocalPlayer():ConCommand("say /goto "..v:Nick())
+					RunConsoleCommand("FAdmin", "goto", "$" .. v:SteamID())
 				end
 			end
 			ListButton:AddItem( Goto )
@@ -332,9 +346,9 @@ function AdminPage()
 				Base:Remove()
 				
 				if SAdminPanel.Ulx then
-					Derma_StringRequest("Kick", "What is the reason?", "", function(text) RunConsoleCommand("ulx", "kick", v:Nick(), text) end) 
+					Derma_StringRequest("Kick", "What is the reason?", "", function(text) RunConsoleCommand("ulx", "kick", "$" .. v:SteamID(), text) end) 
 				elseif SAdminPanel.FAdmin then
-					Derma_StringRequest("Kick", "What is the reason?", "", function(text) RunConsoleCommand("FAdmin", "kick", v:Nick(), text) end) 
+					Derma_StringRequest("Kick", "What is the reason?", "", function(text) RunConsoleCommand("FAdmin", "kick", "$" .. v:SteamID(), text) end) 
 				end
 			end
 			ListButton:AddItem( Kick )
@@ -367,15 +381,73 @@ function AdminPage()
 			end
 			Ban.DoClick = function()
 				Base:Remove()
-				
-				if SAdminPanel.Ulx then
-					OpenBanPanel( "Time of the ban? (0 = permanent)", "Reason for the ban?", "!ban" )
-				elseif SAdminPanel.FAdmin then
-					OpenBanPanel( "Time of the ban? (0 = permanent)", "Reason for the ban?", "/ban" )
-				end
+
+				OpenBanPanel()
 			end
 			ListButton:AddItem( Ban )
 		end
+	end
+end
+
+function WarnInfos()
+	local Base = vgui.Create("DFrame")
+    Base:SetSize(610, 350)
+    Base:SetPos(ScrW() / 2 - 400, ScrH() / 2 - 225)
+    Base:SetTitle("")
+    Base:ShowCloseButton(false)
+    Base:SetVisible(true)
+    Base:MakePopup()
+    Base:Center()
+    Base.Paint = function(self,w,h)
+        draw.RoundedBox(6, 0, 0, w, h, SAdminPanel.BackgroundColor1)
+        draw.RoundedBox(6, 0, 0, w, h - 5, SAdminPanel.BackgroundColor2)
+
+        draw.DrawText("SAdmin | Admin Menu", "SlownAdminPanelTitleFont", 5, 3, color_white)
+    end
+
+    local Close = vgui.Create("DButton", Base)
+    Close:SetSize(40, 15)
+    Close:SetPos(562, 8)
+    Close:SetText("X")
+    Close:SetTooltip("Fermer")
+    Close:SetTextColor(Color(0,0,0,255))
+    Close.Paint = function(self,w,h)
+        draw.RoundedBox(3, 0, 0, w, h, SAdminPanel.Color )
+    end
+    Close.DoClick = function()
+        Base:Close()
+    end
+
+	ListWarn = vgui.Create( "DListView", Base)
+	ListWarn:SetPos( 5, 30 )
+	ListWarn:SetSize( 600, 310 )
+	ListWarn:SetMultiSelect(false)
+	ListWarn:AddColumn("ID"):SetFixedWidth( 40 )
+	ListWarn:AddColumn("Warning Admin"):SetFixedWidth( 200 )
+	ListWarn:AddColumn("Reason")
+	ListWarn:AddColumn("Server"):SetFixedWidth( 120 )
+	ListWarn:AddColumn("Date/Time"):SetFixedWidth( 120 )
+	for k, v in pairs(AWarn.playerinfo) do
+		if v.server == "NULL" then v.server = "UNKNOWN" end
+		ListWarn:AddLine(v.pid, v.admin, v.reason, v.server, v.date)
+	end
+	ListWarn.OnRowRightClick = function( PlayerList, line )
+		local DropDown = DermaMenu()
+		DropDown:AddOption("Delete Warning", function()
+			warning = ListWarn:GetLine( line ):GetValue( 1 )
+			net.Start("awarn_deletesinglewarn")
+			net.WriteInt( warning, 16 )
+			net.SendToServer()
+			
+			ListWarn:Clear()
+			net.Start("awarn_fetchwarnings")
+			net.WriteString( AWarn.lastselected )
+			net.SendToServer()
+		end )
+		DropDown:AddOption("Copy To Clipboard", function()
+			SetClipboardText( ListWarn:GetLine( line ):GetValue( 3 ) )
+		end )
+		DropDown:Open()
 	end
 end
 
@@ -444,14 +516,16 @@ net.Receive("MessageAdminCheckVersionIsNoValidate", function(len,ply)
 	end
 end)
 
-net.Receive("MessageAdminActivate", function(len,ply)
-	chat.AddText(Color(230, 92, 78), "[SAdmin] ", color_white, "Admin Mod is Activate!")
-end)
+net.Receive("MessageAdmin", function(len,ply)
+	local ply = LocalPlayer()
 
-net.Receive("MessageAdminDisable", function(len,ply)
-	chat.AddText(Color(230, 92, 78), "[SAdmin] ", color_white, "Admin Mod is Disable!")
+	if ply:GetNWBool("Admin") == false then
+		chat.AddText(SAdminChatColor, "[SAdmin] ", color_white, "Admin Mod is Activate!")
+	elseif ply:GetNWBool("Admin") == true then
+		chat.AddText(SAdminChatColor, "[SAdmin] ", color_white, "Admin Mod is Disable!")
+	end
 end)
 
 net.Receive("MessageAdminCheckVersionValidate", function(len,ply)
-	chat.AddText(Color(230, 92, 78), "[SAdmin] ", color_white, "Your addon is up to date!")
+	chat.AddText(SAdminChatColor, "[SAdmin] ", color_white, "Your addon is up to date!")
 end)
