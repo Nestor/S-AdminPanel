@@ -4,6 +4,8 @@
 
 AddCSLuaFile()
 
+AWarn = {} 
+
 AWarn.playerinfo = {} 
 
 local SAdminChatColor = Color(230, 92, 78)
