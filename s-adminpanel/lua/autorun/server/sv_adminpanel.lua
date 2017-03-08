@@ -19,11 +19,11 @@ hook.Add( "PlayerSay", "CommandSlownAdminPanel", function( ply, text, team )
 	if text == SAdminPanel.ModeAdminCommand then
 		if ply:GetNWBool("Admin") == false then
 			if SAdminPanel.Ulx then
-				RunConsoleCommand("ulx", "god", "$" .. v:SteamID())
-				RunConsoleCommand("ulx", "cloak", "$" .. v:SteamID())
+				RunConsoleCommand("ulx", "god", "$" .. ply:SteamID())
+				RunConsoleCommand("ulx", "cloak", "$" .. ply:SteamID())
 			elseif SAdminPanel.FAdmin then
-				RunConsoleCommand("FAdmin", "god", "$" .. v:SteamID())
-				RunConsoleCommand("FAdmin", "cloak", "$" .. v:SteamID())
+				RunConsoleCommand("FAdmin", "god", "$" .. ply:SteamID())
+				RunConsoleCommand("FAdmin", "cloak", "$" .. ply:SteamID())
 			end
 
 			net.Start( "MessageAdmin" )
@@ -33,11 +33,11 @@ hook.Add( "PlayerSay", "CommandSlownAdminPanel", function( ply, text, team )
 
 		elseif ply:GetNWBool("Admin") == true then
 			if SAdminPanel.Ulx then
-				RunConsoleCommand("ulx", "ungod", "$" .. v:SteamID())
-				RunConsoleCommand("ulx", "uncloak", "$" .. v:SteamID())
+				RunConsoleCommand("ulx", "ungod", "$" .. ply:SteamID())
+				RunConsoleCommand("ulx", "uncloak", "$" .. ply:SteamID())
 			elseif SAdminPanel.FAdmin then
-				RunConsoleCommand("FAdmin", "ungod", "$" .. v:SteamID())
-				RunConsoleCommand("FAdmin", "uncloak", "$" .. v:SteamID())
+				RunConsoleCommand("FAdmin", "ungod", "$" .. ply:SteamID())
+				RunConsoleCommand("FAdmin", "uncloak", "$" .. ply:SteamID())
 			end
 
 			net.Start( "MessageAdmin" )
